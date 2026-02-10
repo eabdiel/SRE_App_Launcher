@@ -1,4 +1,4 @@
-# App24 – SRE Application Cockpit
+# SRE Application Cockpit
 
 A lightweight, centralized **application launcher** that dynamically discovers and launches local executables and Python applications from a single folder.
 
