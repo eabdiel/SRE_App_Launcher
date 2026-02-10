@@ -1,19 +1,14 @@
 {
   "title_overrides": {},
   "favorites": [
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit\\applications\\progretomato",
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit\\applications\\cab_dashboard.exe"
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato"
   ],
   "hidden": [],
   "order": [
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit\\applications\\cab_dashboard.exe",
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit\\applications\\progretomato"
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato"
   ],
+  "icon_overrides": {},
   "_last_scan_keys": [
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit\\applications\\cab_dashboard.exe",
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit\\applications\\progretomato"
-  ],
-  "icon_overrides": {
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit\\applications\\progretomato": "C:/Users/er10210/OneDrive - arthrex.com/Documents/668ee9f0abdd6.png"
-  }
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato"
+  ]
 }
