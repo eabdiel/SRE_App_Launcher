@@ -70,3 +70,6 @@ def add_new_keys_to_order(state: Dict[str, Any], discovered_keys: list) -> None:
     for k in discovered_keys:
         if k not in known:
             state.setdefault("order", []).append(k)
+            # Default new tiles to "wide" to match Metro feel
+            state.setdefault("tile_sizes", {})
+            state["tile_sizes"].setdefault(k, "wide")

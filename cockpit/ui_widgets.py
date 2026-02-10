@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QListWidget
+from PySide6.QtWidgets import QListWidget, QListView
 
 from .constants import GRID_SIZE
 
@@ -27,9 +27,12 @@ class TileList(QListWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setViewMode(QListWidget.IconMode)
+        self.setFlow(QListView.LeftToRight)
+        self.setWrapping(True)
         self.setMovement(QListWidget.Snap)
         self.setResizeMode(QListWidget.Adjust)
-        self.setSpacing(10)
+        self.setSpacing(6)
+        self.setContentsMargins(6, 6, 6, 6)
 
         self.setDragEnabled(True)
         self.setAcceptDrops(True)

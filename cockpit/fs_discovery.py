@@ -55,7 +55,13 @@ def find_python_main(folder: Path) -> Optional[Path]:
 
 
 def scan_applications_folder(apps_dir: Path) -> List[AppEntry]:
-    """Scan ./applications and return launchable app entries."""
+    """Scan ./applications and return launchable app entries.
+
+    Supports:
+      - .exe
+      - .lnk (Windows shortcut)
+      - Python app folders containing a main.py at top-level (no deep search)
+    """
     apps: List[AppEntry] = []
     if not apps_dir.exists():
         apps_dir.mkdir(parents=True, exist_ok=True)
@@ -69,6 +75,20 @@ def scan_applications_folder(apps_dir: Path) -> List[AppEntry]:
                     key=key,
                     display_name=item.stem,
                     kind="exe",
+                    path=str(item),
+                    launch_target=str(item),
+                )
+            )
+            continue
+
+        # Windows shortcut (.lnk) - treat as launchable
+        if item.is_file() and item.suffix.lower() == ".lnk":
+            key = safe_key(item)
+            apps.append(
+                AppEntry(
+                    key=key,
+                    display_name=item.stem,
+                    kind="lnk",
                     path=str(item),
                     launch_target=str(item),
                 )
@@ -91,3 +111,4 @@ def scan_applications_folder(apps_dir: Path) -> List[AppEntry]:
                 )
 
     return apps
+

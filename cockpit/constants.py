@@ -38,8 +38,8 @@ METRO_TILE_COLORS = [
 ]
 
 # Tile sizes (approximate Windows Phone "small" and "wide")
-TILE_SMALL = QSize(160, 110)
-TILE_WIDE  = QSize(340, 110)
+TILE_SMALL = QSize(150, 110)
+TILE_WIDE = QSize(300, 110)
 
 # Grid size should accommodate the widest tile so mixed sizes can coexist
 GRID_SIZE = TILE_WIDE
