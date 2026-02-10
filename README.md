@@ -10,6 +10,7 @@ architecture, and implementation reflect the author's intent and ownership.
 ------------------------------------------------------------------------------
 
 SRE Application Cockpit 🚀
+<img width="976" height="752" alt="image" src="https://github.com/user-attachments/assets/0fae80a3-4e08-4bff-b2a7-150aec682b28" />
 
 A Windows-Phone / Metro-style application launcher that acts as a single control
 center for:
@@ -22,7 +23,7 @@ center for:
 
 Designed for non-technical users:
 No manual virtualenvs, no pip commands, no setup scripts.
-<img width="1006" height="751" alt="image" src="https://github.com/user-attachments/assets/fcc915fb-f892-4333-8234-898ab439a85e" />
+
 
 ------------------------------------------------------------------------------
 
