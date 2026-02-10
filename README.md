@@ -3,7 +3,7 @@
 A lightweight, centralized **application launcher** that dynamically discovers and launches local executables and Python applications from a single folder.
 
 Designed for engineers, SREs, and power users who want a **simple, visual cockpit** for their internal tools without hard-coding paths or maintaining a static config.
-
+Note: This README.md file has been edited with copilot for consistency and grammar uniformity.
 ---
 
 ## ✨ Key Features
