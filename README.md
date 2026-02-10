@@ -22,6 +22,7 @@ center for:
 
 Designed for non-technical users:
 No manual virtualenvs, no pip commands, no setup scripts.
+<img width="1006" height="751" alt="image" src="https://github.com/user-attachments/assets/fcc915fb-f892-4333-8234-898ab439a85e" />
 
 ------------------------------------------------------------------------------
 
