@@ -1,2 +1,8 @@
 pyside6
 requests
+aiohttp
+pynput
+pywin32
+psutil
+openpyxl
+pyperclip

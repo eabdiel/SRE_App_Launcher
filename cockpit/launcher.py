@@ -48,6 +48,18 @@ def launch_app(entry: AppEntry, base_dir: Path, state: dict) -> None:
         webbrowser.open(entry.launch_target)
         return
 
+    if entry.kind == "urlfile":
+        # Windows Internet Shortcut (.url)
+        try:
+            # Let OS handle it
+            if sys.platform.startswith("win"):
+                subprocess.Popen(["cmd", "/c", "start", "", entry.launch_target], shell=False)
+            else:
+                webbrowser.open(Path(entry.launch_target).as_uri())
+        except Exception:
+            webbrowser.open(Path(entry.launch_target).as_uri())
+        return
+
     if entry.kind == "lnk":
         _startfile(entry.launch_target)
         return

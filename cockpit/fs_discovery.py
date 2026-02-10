@@ -95,6 +95,21 @@ def scan_applications_folder(apps_dir: Path) -> List[AppEntry]:
             )
             continue
 
+
+        # Website shortcut (.url)
+        if item.is_file() and item.suffix.lower() == ".url":
+            key = safe_key(item)
+            apps.append(
+                AppEntry(
+                    key=key,
+                    display_name=item.stem,
+                    kind="urlfile",
+                    path=str(item),
+                    launch_target=str(item),
+                )
+            )
+            continue
+
         # Python folder app
         if item.is_dir():
             main_file = find_python_main(item)

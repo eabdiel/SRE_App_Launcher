@@ -1,25 +1,30 @@
 #===============================================================================
-#  APP24_SRE_Application_Cockpit | main_window.py
+#  SRE Application Cockpit | cockpit/main_window.py
 #===============================================================================
 #  Author      : Edwin A. Rodriguez
-#  Role/Team   : SAP COE / SAP SRE (GRM-Testing-Automation & Governance)
 #  Created     : 2026-02-10
 #  Last Update : 2026-02-10
 #
 #  Summary
 #  -------
 #  Main Metro/Windows-Phone style UI for the cockpit:
-#    - Favorites / Hidden sections + main app list
-#    - Drag/drop ordering (persisted)
+#    - Tile lists: Favorites, Apps, Hidden
+#    - Drag & drop ordering (persisted)
+#    - Drag & drop import:
+#         * drop .exe -> creates .lnk in ./applications
+#         * drop .lnk/.url -> copies into ./applications
+#         * drop URL text -> creates .url in ./applications
+#         * drop folder -> copies into ./applications (python app folder)
 #    - GitHub import via applications/git-repos (plus URL shortcuts)
-#    - Shared Python runtime setup button
-#    - Right-click actions: favorite, hide, rename, icon, tile size
-#    - Update Libraries button (scan ./applications and install into shared runtime)
+#    - Shared Python runtime setup + dependency update (shared env)
+#    - Right-click actions: favorite, hide, rename, icon, tile size, remove
 #===============================================================================
 
 from __future__ import annotations
 
 import hashlib
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -30,10 +35,7 @@ from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
-    QHBoxLayout,
     QInputDialog,
-    QLabel,
-    QListWidget,
     QListWidgetItem,
     QMainWindow,
     QMenu,
@@ -42,8 +44,10 @@ from PySide6.QtWidgets import (
     QProgressDialog,
     QSplitter,
     QToolButton,
+    QHBoxLayout,
     QVBoxLayout,
     QWidget,
+    QLabel,
 )
 
 from .banner_widget import BannerWidget
@@ -92,6 +96,7 @@ class MainWindow(QMainWindow):
         self.state = load_state(self.state_path)
 
         self._runtime_installing = False
+        self.setAcceptDrops(True)
 
         self.setStyleSheet(f"""
         QMainWindow {{ background: {METRO_BG}; }}
@@ -115,7 +120,7 @@ class MainWindow(QMainWindow):
 
         header = QHBoxLayout()
         title = QLabel(
-            f"<b>{APP_TITLE}</b> — drop EXEs/LNKs or Python app folders into <code>./{APP_FOLDER_NAME}</code>"
+            f"<b>{APP_TITLE}</b> — drop EXEs/LNKs/URLs or Python app folders into <code>./{APP_FOLDER_NAME}</code>"
         )
         header.addWidget(title)
         header.addStretch(1)
@@ -142,13 +147,14 @@ class MainWindow(QMainWindow):
 
         layout.addLayout(header)
 
-        # Scrolling banner (edit ./banner.txt to change)
+        # Banner (edit ./banner.txt)
         self.banner = BannerWidget(self.base_dir / "banner.txt")
         self.banner.setStyleSheet(
             "QFrame#BannerWidget{background:#1a1a1a;border:1px solid #2a2a2a;} QLabel{color:white;}"
         )
         layout.addWidget(self.banner)
 
+        # Lists
         self.fav_list = TileList()
         self.fav_list.itemDoubleClicked.connect(self.launch_item)
         self.fav_list.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -198,18 +204,108 @@ class MainWindow(QMainWindow):
         self.refresh()
 
     # ----------------------------
+    # Drag & Drop (pin tiles quickly)
+    # ----------------------------
+    def dragEnterEvent(self, event):
+        md = event.mimeData()
+        if md.hasUrls() or md.hasText():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        md = event.mimeData()
+        added_any = False
+
+        if md.hasUrls():
+            for u in md.urls():
+                try:
+                    if u.isLocalFile():
+                        p = Path(u.toLocalFile())
+                        if not p.exists():
+                            continue
+                        if p.is_file() and p.suffix.lower() in (".exe", ".lnk", ".url"):
+                            self._import_file_as_tile(p)
+                            added_any = True
+                        elif p.is_dir():
+                            self._import_folder_as_tile(p)
+                            added_any = True
+                    else:
+                        url = u.toString().strip()
+                        if url.lower().startswith(("http://", "https://")):
+                            self._create_url_shortcut(url)
+                            added_any = True
+                except Exception:
+                    continue
+
+        if md.hasText():
+            t = (md.text() or "").strip()
+            if t.lower().startswith(("http://", "https://")):
+                try:
+                    self._create_url_shortcut(t)
+                    added_any = True
+                except Exception:
+                    pass
+
+        if added_any:
+            self.refresh()
+
+        event.acceptProposedAction()
+
+    def _import_file_as_tile(self, src: Path):
+        self.apps_dir.mkdir(parents=True, exist_ok=True)
+
+        if src.suffix.lower() in (".lnk", ".url"):
+            dest = self.apps_dir / src.name
+            if dest.exists():
+                return
+            shutil.copy2(src, dest)
+            return
+
+        if src.suffix.lower() == ".exe":
+            dest = self.apps_dir / f"{src.stem}.lnk"
+            if dest.exists():
+                return
+            self._create_windows_shortcut(target=src, link_path=dest)
+
+    def _import_folder_as_tile(self, folder: Path):
+        self.apps_dir.mkdir(parents=True, exist_ok=True)
+        dest = self.apps_dir / folder.name
+        if dest.exists():
+            return
+        shutil.copytree(folder, dest)
+
+    def _create_url_shortcut(self, url: str):
+        self.apps_dir.mkdir(parents=True, exist_ok=True)
+        safe = url.replace("https://", "").replace("http://", "")
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", safe).strip("_")
+        if not safe:
+            safe = "website"
+        dest = self.apps_dir / f"{safe}.url"
+        if dest.exists():
+            return
+        dest.write_text(f"[InternetShortcut]\nURL={url}\n", encoding="utf-8")
+
+    def _create_windows_shortcut(self, target: Path, link_path: Path):
+        if not sys.platform.startswith("win"):
+            shutil.copy2(target, link_path)
+            return
+        ps = (
+            "$WshShell = New-Object -ComObject WScript.Shell; "
+            f"$Shortcut = $WshShell.CreateShortcut('{str(link_path)}'); "
+            f"$Shortcut.TargetPath = '{str(target)}'; "
+            "$Shortcut.WorkingDirectory = (Split-Path $Shortcut.TargetPath); "
+            "$Shortcut.Save();"
+        )
+        subprocess.check_call(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps])
+
+    # ----------------------------
     # Git file parsing + placeholders
     # ----------------------------
     def _entries_from_git_file(self) -> list[tuple[str, str, str]]:
-        """Return list of (kind, display, value) from applications/git-repos.
-
-        - GitHub repos (https://github.com/<owner>/<repo>) => kind='git', display=repo, value=url
-        - Other http(s) URLs => kind='url', display=host/path, value=url
-        """
         repos_file = self.apps_dir / GIT_REPOS_FILE_NAME
         if not repos_file.exists():
             return []
-
         urls = read_git_repos_file(repos_file)
         out: list[tuple[str, str, str]] = []
         for u in urls:
@@ -224,55 +320,33 @@ class MainWindow(QMainWindow):
         return out
 
     def _augment_with_git_placeholders(self, apps: list[AppEntry]) -> list[AppEntry]:
-        existing_names = {Path(a.path).name for a in apps}
-
+        existing_names = {Path(a.path).name for a in apps if a.path}
         for kind, display, value in self._entries_from_git_file():
             if kind == "git":
                 if display in existing_names:
                     continue
-                apps.append(
-                    AppEntry(
-                        key=f"git:{display}",
-                        kind="git",
-                        display_name=display,
-                        path=value,
-                        launch_target=value,
-                    )
-                )
+                apps.append(AppEntry(key=f"git:{display}", kind="git", display_name=display, path=value, launch_target=value))
             elif kind == "url":
-                apps.append(
-                    AppEntry(
-                        key=f"url:{value}",
-                        kind="url",
-                        display_name=display,
-                        path=value,
-                        launch_target=value,
-                    )
-                )
+                apps.append(AppEntry(key=f"url:{value}", kind="url", display_name=display, path=value, launch_target=value))
         return apps
 
     def _merge_repo_requirements_if_present(self, repo_folder: Path) -> bool:
-        """If repo has requirements.txt, merge it into cockpit-requirements.txt."""
         repo_req = repo_folder / "requirements.txt"
         if not repo_req.exists():
             return False
-
         cockpit_req = self.base_dir / "cockpit-requirements.txt"
         try:
-            lines = []
+            pkgs: list[str] = []
             for line in repo_req.read_text(encoding="utf-8", errors="ignore").splitlines():
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
-                # Ignore editable installs and local paths for now
                 if line.startswith(("-e ", "--")):
                     continue
-                lines.append(line)
-
-            if not lines:
+                pkgs.append(line)
+            if not pkgs:
                 return False
-
-            return update_cockpit_requirements(cockpit_req, lines)
+            return update_cockpit_requirements(cockpit_req, pkgs)
         except Exception:
             return False
 
@@ -316,7 +390,7 @@ class MainWindow(QMainWindow):
         self.main_list.clear()
         self.hidden_list.clear()
 
-        def add_item(list_widget: QListWidget, key: str):
+        def add_item(list_widget: TileList, key: str):
             app = self.apps_by_key.get(key)
             if not app:
                 return
@@ -331,6 +405,8 @@ class MainWindow(QMainWindow):
                 subtitle = "Executable"
             elif app.kind == "lnk":
                 subtitle = "Shortcut"
+            elif app.kind == "urlfile":
+                subtitle = "Website"
             else:
                 if self._runtime_installing:
                     subtitle = "Python • Installing…"
@@ -344,7 +420,7 @@ class MainWindow(QMainWindow):
             if icon_path and Path(icon_path).exists():
                 icon = QIcon(icon_path)
 
-            size_mode = self.state.get("tile_sizes", {}).get(key, "small")
+            size_mode = self.state.get("tile_sizes", {}).get(key, "wide")
             tile_size = TILE_WIDE if size_mode == "wide" else TILE_SMALL
 
             item = QListWidgetItem()
@@ -411,13 +487,11 @@ class MainWindow(QMainWindow):
     # Dependency maintenance
     # ----------------------------
     def update_libraries(self):
-        """Scan ./applications for Python imports and ensure shared env has them installed."""
         req = self.base_dir / "cockpit-requirements.txt"
         if not req.exists():
             QMessageBox.warning(self, "Missing file", f"Missing: {req}")
             return
 
-        # Ensure shared env exists first
         try:
             log_setup = self.base_dir / ".cockpit" / "logs" / "shared_env_setup.log"
             py, _ = ensure_shared_env(self.base_dir, self.state, req, log_setup)
@@ -426,11 +500,11 @@ class MainWindow(QMainWindow):
             return
 
         prog = QProgressDialog("Scanning applications and updating libraries…", "Close", 0, 0, self)
+        prog.setStyleSheet(PROGRESS_STYLE)
         prog.setWindowTitle("Update Libraries")
         prog.setWindowModality(Qt.WindowModal)
         prog.setMinimumDuration(0)
         prog.setValue(0)
-        prog.setStyleSheet(PROGRESS_STYLE)
 
         try:
             modules = discover_imports_in_tree(self.apps_dir)
@@ -448,7 +522,6 @@ class MainWindow(QMainWindow):
                 msg.append("Installed: " + ", ".join(newly[:10]) + ("…" if len(newly) > 10 else ""))
             if not msg:
                 msg.append("No changes needed. Environment already up to date.")
-
             QMessageBox.information(self, "Update Libraries", "\n".join(msg))
         except Exception as e:
             log_deps = self.base_dir / ".cockpit" / "logs" / "shared_env_deps.log"
@@ -518,8 +591,6 @@ class MainWindow(QMainWindow):
                     continue
 
                 download_and_extract_main_branch(owner, repo, dest)
-
-                # QoL: merge repo requirements.txt into cockpit-requirements.txt if present
                 self._merge_repo_requirements_if_present(dest)
 
                 ok_downloaded.append(f"{owner}/{repo}")
@@ -576,8 +647,6 @@ class MainWindow(QMainWindow):
                     if not github_has_root_main_py_on_main(owner, repo):
                         raise RuntimeError("No root main.py on branch 'main'")
                     download_and_extract_main_branch(owner, repo, dest)
-
-                    # QoL: merge repo requirements.txt into cockpit-requirements.txt if present
                     self._merge_repo_requirements_if_present(dest)
                 finally:
                     prog.close()
@@ -589,7 +658,7 @@ class MainWindow(QMainWindow):
             save_state(self.state_path, self.state)
 
         except Exception as e:
-            if entry and entry.kind == "py" and not self._runtime_ready():
+            if entry.kind == "py" and not self._runtime_ready():
                 QMessageBox.critical(self, "Launch failed", f"{e}\n\nTip: Click 'Setup Runtime' first.")
             else:
                 QMessageBox.critical(self, "Launch failed", str(e))
@@ -605,7 +674,7 @@ class MainWindow(QMainWindow):
 
         is_fav = key in self.state.get("favorites", [])
         is_hidden = key in self.state.get("hidden", [])
-        size_mode = self.state.get("tile_sizes", {}).get(key, "small")
+        size_mode = self.state.get("tile_sizes", {}).get(key, "wide")
 
         menu = QMenu(self)
 
@@ -617,6 +686,7 @@ class MainWindow(QMainWindow):
         act_reset_icon = QAction("Reset icon", self)
         act_setup_runtime = QAction("Setup Runtime (Shared)", self)
         act_open = QAction("Open location…", self)
+        act_remove = QAction("Uninstall / Remove…", self)
 
         menu.addAction(act_fav)
         menu.addAction(act_hide)
@@ -630,6 +700,8 @@ class MainWindow(QMainWindow):
         menu.addAction(act_setup_runtime)
         menu.addSeparator()
         menu.addAction(act_open)
+        menu.addSeparator()
+        menu.addAction(act_remove)
 
         chosen = menu.exec(which_list.mapToGlobal(pos))
         if not chosen:
@@ -688,6 +760,50 @@ class MainWindow(QMainWindow):
                 target = Path(entry.path)
                 folder = target.parent if target.is_file() else target
                 self.open_in_explorer(folder)
+
+        elif chosen == act_remove:
+            entry = self.apps_by_key.get(key)
+            if not entry:
+                return
+
+            label = self.state.get("title_overrides", {}).get(key, entry.display_name)
+            res = QMessageBox.question(
+                self,
+                "Uninstall / Remove",
+                f"Remove '{label}'?\n\nThis will delete the shortcut/app from the applications folder.",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if res != QMessageBox.Yes:
+                return
+
+            try:
+                p = Path(entry.path)
+
+                if entry.kind == "git":
+                    repos_file = self.apps_dir / GIT_REPOS_FILE_NAME
+                    if repos_file.exists():
+                        lines = repos_file.read_text(encoding="utf-8", errors="ignore").splitlines()
+                        kept = [ln for ln in lines if ln.strip() != entry.path]
+                        repos_file.write_text("\n".join(kept).rstrip() + "\n", encoding="utf-8")
+                else:
+                    if p.exists():
+                        if p.is_dir():
+                            shutil.rmtree(p)
+                        else:
+                            p.unlink()
+
+                self.state["favorites"] = [k for k in self.state.get("favorites", []) if k != key]
+                self.state["hidden"] = [k for k in self.state.get("hidden", []) if k != key]
+                self.state["order"] = [k for k in self.state.get("order", []) if k != key]
+                self.state.get("title_overrides", {}).pop(key, None)
+                self.state.get("icon_overrides", {}).pop(key, None)
+                self.state.get("tile_sizes", {}).pop(key, None)
+
+            except Exception as e:
+                QMessageBox.critical(self, "Remove failed", str(e))
+
+            self.refresh()
+            return
 
         self.rebuild_lists()
         save_state(self.state_path, self.state)
