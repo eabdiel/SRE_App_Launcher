@@ -143,6 +143,7 @@ You can delete this file at any time to reset the UI.
 - Git updates currently replace the entire folder (no partial merges)
 - App execution errors are surfaced directly to the user
 - Icons extracted from `.exe` files are not yet supported (generic icons used)
+- Libraries and dependencies need to be pip-installed if your local python environment doesn't have the libraries used by the linked repos
 
 ---
 
