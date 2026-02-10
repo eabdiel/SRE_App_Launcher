@@ -1,171 +1,200 @@
-# SRE Application Cockpit
+SRE APPLICATION COCKPIT
+=======================
 
-A lightweight, centralized **application launcher** that dynamically discovers and launches local executables and Python applications from a single folder.
+NOTE:
+-----
+This README was generated with AI assistance to ensure clarity, consistency,
+and grammar uniformity across documentation. All technical design decisions,
+architecture, and implementation reflect the author's intent and ownership.
 
-Designed for engineers, SREs, and power users who want a **simple, visual cockpit** for their internal tools without hard-coding paths or maintaining a static config.
+------------------------------------------------------------------------------
 
-As a quick note - this README.md file has been edited with copilot for consistency and grammar uniformity.
----
+SRE Application Cockpit 🚀
 
-## ✨ Key Features
+A Windows-Phone / Metro-style application launcher that acts as a single control
+center for:
 
-- **Drop-in discovery**
-  - Place apps inside `./applications`
-  - No registration, no config files per app
+- Native executables (.exe)
+- Windows shortcuts (.lnk)
+- Python applications (folders with main.py)
+- Public GitHub Python repositories (auto-download & update)
+- Website shortcuts (open in browser)
 
-- **Supported application types**
-  - Windows executables (`.exe`)
-  - Python applications stored in folders containing a top-level `main.py`
-    - Only the first directory level is scanned (no deep recursion)
+Designed for non-technical users:
+No manual virtualenvs, no pip commands, no setup scripts.
 
-- **Tile-based UI**
-  - Square tiles with app name and icon
-  - Drag & drop to reorder
-  - Double-click to launch
+------------------------------------------------------------------------------
 
-- **Organization**
-  - ⭐ Favorites (pinned at the top)
-  - 🙈 Hidden apps (collapsible section)
-  - Persistent layout and state
+KEY FEATURES
+------------
 
-- **GitHub integration**
-  - Optional `git-repos` manifest file
-  - Download or update public GitHub repositories automatically
-  - Repos are imported only if the `main` branch contains a root-level `main.py`
-  - Imported repos become normal launchable apps
+- Metro / Windows-Phone inspired tile UI
+- Favorites, Hidden apps, and tile resizing (Small / Wide)
+- Shared Python runtime (one environment for all apps)
+- Import Python apps directly from GitHub
+- URL tiles for internal tools & websites
+- Automatic dependency detection & installation
+- Custom icons and renamed tiles
+- Scrolling banner for announcements or notes
 
-- **Customization**
-  - Rename tiles
-  - Change tile icons (PNG / ICO / JPG)
-  - State persisted in `launcher_state.json`
+------------------------------------------------------------------------------
 
----
+QUICK GUIDE (START HERE)
+-----------------------
 
-## 📁 Folder Structure
+1) RUN THE COCKPIT
 
-```
-App24_SRE_Application_Cockpit/
-│
-├── main.py
-├── launcher_state.json          # auto-generated
-│
-└── applications/
-    ├── MyTool.exe
-    ├── MyPythonApp/
-    │   └── main.py
-    ├── AnotherTool.exe
-    └── git-repos                 # optional (no extension)
-```
-
----
-
-## 🔹 Application Discovery Rules
-
-### Executables
-- Any `.exe` placed directly under `./applications` is shown as a launchable tile.
-
-### Python Applications
-- Any folder under `./applications` that contains a **top-level `main.py`**
-- Subfolders are ignored during discovery.
-- Python apps are launched using the same Python interpreter that runs the launcher.
-
----
-
-## 🔄 GitHub Repository Loading
-
-Create a file named:
-
-```
-./applications/git-repos
-```
-
-Example contents:
-
-```
-https://github.com/eabdiel/ProgreTomato
-```
-
-Rules:
-- One public GitHub repository per line
-- Lines starting with `#` are ignored
-- Only repositories with:
-  - a public repo
-  - a `main` branch
-  - a root-level `main.py`
-  will be downloaded
-
-Behavior:
-- Repositories are downloaded into `./applications/<repo_name>/`
-- If the folder already exists, it is **replaced** (simple update mechanism)
-- A progress dialog is shown during loading
-
----
-
-## ▶️ Running the Application
-
-### Requirements
-- Python 3.8+
-- Windows (primary target)
-
-### Install dependencies
-```bash
-pip install pyside6 requests
-```
-
-### Run
-```bash
 python main.py
-```
 
----
+Or launch the packaged executable if provided.
 
-## 💾 Persistent State
+------------------------------------------------------------------------------
 
-The launcher automatically saves UI state to:
+2) ADD APPLICATIONS
 
-```
-launcher_state.json
-```
+Option A — Local Apps (Drag & Drop)
+----------------------------------
+Drop any of the following into the ./applications folder:
+- .exe
+- .lnk (Windows shortcut)
+- A Python app folder containing main.py
 
-This includes:
-- Tile order
-- Favorites
-- Hidden apps
-- Custom names
-- Custom icons
+They appear instantly as tiles.
 
-You can delete this file at any time to reset the UI.
+Option B — GitHub Python Apps
+-----------------------------
+1. Open ./applications/git-repos
+2. Add one repository URL per line:
+   https://github.com/eabdiel/ProgreTomato
+3. Click "Load from Git"
 
----
+Requirements:
+- Public repo
+- main.py at repository root
 
-## ⚠️ Notes & Limitations
+If requirements.txt exists, it is merged automatically.
 
-- GitHub API access is unauthenticated (rate-limited by GitHub)
-- Git updates currently replace the entire folder (no partial merges)
-- App execution errors are surfaced directly to the user
-- Icons extracted from `.exe` files are not yet supported (generic icons used)
-- Libraries and dependencies need to be pip-installed if your local python environment doesn't have the libraries used by the linked repos
+Option C — Website Shortcuts
+----------------------------
+Add any URL to git-repos:
+https://github.com
+https://internal-dashboard.company.com
 
----
+These appear as browser-launch tiles.
 
-## 🧭 Roadmap (Planned / Optional)
+------------------------------------------------------------------------------
 
-- Extract real icons from executables
-- Background Git sync (non-blocking thread)
-- Search / filter bar
-- App launch arguments & environment variables
-- Packaging as a single-file executable (PyInstaller)
+3) SETUP PYTHON RUNTIME (ONE-TIME)
 
----
+Click "Setup Runtime"
 
-## © Copyright
+Creates a shared Python environment bundled with the cockpit.
+No system Python required for end users.
 
-Copyright © 2026  
-**Edwin A. Rodriguez**
+------------------------------------------------------------------------------
 
-This project is currently intended for personal and internal use.  
-If open-sourced in the future, an OSI-approved license (e.g., MIT) will be added.
+4) INSTALL / UPDATE LIBRARIES
 
----
+Click "Update Libraries"
 
-*Built as a practical SRE utility - simple, and automation friendly.
+This will:
+- Scan all .py files under ./applications
+- Detect imported modules
+- Update cockpit-requirements.txt
+- Install missing packages into the shared runtime
+
+This resolves errors such as:
+ModuleNotFoundError: No module named 'pynput'
+
+------------------------------------------------------------------------------
+
+FOLDER STRUCTURE
+----------------
+
+App24_SRE_Application_Cockpit/
+|
+|-- main.py
+|-- banner.txt
+|-- cockpit-requirements.txt
+|-- runtime_env/
+|
+|-- applications/
+|   |-- git-repos
+|   |-- MyExeApp.exe
+|   |-- MyShortcut.lnk
+|   |-- MyPythonApp/
+|       |-- main.py
+|
+|-- cockpit/
+|-- .cockpit/
+    |-- logs/
+
+------------------------------------------------------------------------------
+
+TILE ACTIONS (RIGHT-CLICK)
+-------------------------
+
+- Favorite / Unfavorite
+- Hide / Unhide
+- Small / Wide tile
+- Rename tile
+- Change icon
+- Open file location
+- Setup Runtime shortcut
+
+------------------------------------------------------------------------------
+
+BANNER TEXT
+-----------
+
+Edit banner.txt to control the scrolling banner:
+
+Welcome to the SRE Application Cockpit
+Drop apps into /applications or load them from GitHub
+
+------------------------------------------------------------------------------
+
+DEPENDENCY STRATEGY
+-------------------
+
+- One shared Python runtime
+- No per-app virtual environments
+- No user-run pip commands
+
+Dependencies come from:
+- Detected imports
+- Repo requirements.txt (if present)
+- Manual cockpit-requirements.txt entries
+
+------------------------------------------------------------------------------
+
+LOGS & TROUBLESHOOTING
+---------------------
+
+Logs location:
+.cockpit/logs/
+
+Useful files:
+- shared_env_setup.log
+- shared_env_deps.log
+
+------------------------------------------------------------------------------
+
+AUTHOR
+------
+
+Edwin A. Rodriguez
+SAP COE / SRE / Automation / Risk Engineering
+
+------------------------------------------------------------------------------
+
+LICENSE
+-------
+
+MIT License
+
+Use it. Modify it. Ship it. Improve it.
+
+------------------------------------------------------------------------------
+
+“One launcher. One runtime. Zero friction.”
