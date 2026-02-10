@@ -56,6 +56,12 @@ def github_has_root_main_py_on_main(owner: str, repo: str) -> bool:
     r = requests.get(api, timeout=20, headers={"Accept": "application/vnd.github+json"})
     return r.status_code == 200
 
+def github_has_root_requirements_on_main(owner: str, repo: str) -> bool:
+    """Checks if requirements.txt exists at repo root on the 'main' branch."""
+    api = f"https://api.github.com/repos/{owner}/{repo}/contents/requirements.txt?ref=main"
+    r = requests.get(api, timeout=20, headers={"Accept": "application/vnd.github+json"})
+    return r.status_code == 200
+
 
 def download_and_extract_main_branch(owner: str, repo: str, dest_folder: Path) -> None:
     """Download main branch zip and extract into dest_folder (replacing it)."""

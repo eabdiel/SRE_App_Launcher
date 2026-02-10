@@ -8,7 +8,7 @@
 #
 #  Summary
 #  -------
-#  Reusable UI widgets (tile list). Keeps the main window/controller smaller.
+#  Reusable UI widgets (tile lists) with Metro-friendly defaults.
 #
 #  Copyright (c) 2026 Edwin A. Rodriguez. All rights reserved.
 #  Provided "AS IS", without warranty of any kind.
@@ -17,9 +17,8 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import QListWidget
-from PySide6.QtCore import QSize
 
-from .constants import ICON_SIZE, TILE_SIZE
+from .constants import GRID_SIZE
 
 
 class TileList(QListWidget):
@@ -30,9 +29,6 @@ class TileList(QListWidget):
         self.setViewMode(QListWidget.IconMode)
         self.setMovement(QListWidget.Snap)
         self.setResizeMode(QListWidget.Adjust)
-        self.setUniformItemSizes(True)
-        self.setIconSize(ICON_SIZE)
-        self.setGridSize(TILE_SIZE)
         self.setSpacing(10)
 
         self.setDragEnabled(True)
@@ -40,3 +36,5 @@ class TileList(QListWidget):
         self.setDropIndicatorShown(True)
         self.setDragDropMode(QListWidget.InternalMove)
         self.setSelectionMode(QListWidget.SingleSelection)
+
+        self.setGridSize(GRID_SIZE)
