@@ -1,1 +1,1 @@
-Welcome to the SRE App Launcher — edit banner.txt to customize this message.
+Welcome to the SRE App Launcher — Please read the guide for tips and troubleshooting.  Contact GRM for issues.

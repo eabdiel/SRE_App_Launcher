@@ -1,21 +1,80 @@
 {
-  "title_overrides": {},
+  "title_overrides": {
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Shell-home": "Solution Manager",
+    "url:https://arthrex-cloudalm.eu10-004.alm.cloud.sap/launchpad#Shell-home": "SAP Cloud ALM",
+    "url:https://78l-ch5vxjthzs-d.eu20-001.process-insights.cloud.sap/reports/system/176a5922-74ba-4b25-a58f-d03771ee6693/start": "Signavio Process Insights",
+    "url:https://app-us.signavio.com/p/hub/home?content-lang=en_us&mode=preview": "Signavio Process Collaboration Hub",
+    "url:https://account.hana.ondemand.com/": "SAP BTP Cockpit",
+    "url:https://arthrex.sharepoint.com/sites/SAPCenterOfExcellence/SitePages/Home.aspx": "SAP COE SharePoint Site",
+    "url:http://vartsmppas.arthrex.local:50000/sap(bD1lbiZjPTEwMCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm": "SAP ChARM",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-cm_cockpit": "Change Admin Cockpit",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-BPChangeAnalyzer?VIEW_ID=BPCA&STANDALONE_MODE=": "BPCA",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\producer.lnk": "EnableNow Producer",
+    "url:https://copilotstudio.microsoft.com/environments/ea571534-4eba-e69c-9a48-83fa7d3bfb1b/home": "Copilot Studio"
+  },
   "favorites": [
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\cab_dashboard.lnk",
     "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato"
   ],
   "hidden": [],
   "order": [
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato"
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\producer.lnk",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\pycharm 2025.3.1.1.lnk",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\sap logon 64.lnk",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Shell-home",
+    "url:https://arthrex-cloudalm.eu10-004.alm.cloud.sap/launchpad#Shell-home",
+    "url:https://78l-ch5vxjthzs-d.eu20-001.process-insights.cloud.sap/reports/system/176a5922-74ba-4b25-a58f-d03771ee6693/start",
+    "url:https://app-us.signavio.com/p/hub/home?content-lang=en_us&mode=preview",
+    "url:https://account.hana.ondemand.com/",
+    "url:http://vartsmppas.arthrex.local:50000/sap(bD1lbiZjPTEwMCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-cm_cockpit",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-BPChangeAnalyzer?VIEW_ID=BPCA&STANDALONE_MODE=",
+    "url:https://copilotstudio.microsoft.com/environments/ea571534-4eba-e69c-9a48-83fa7d3bfb1b/home",
+    "url:https://arthrex.sharepoint.com/sites/SAPCenterOfExcellence/SitePages/Home.aspx",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\tosca commander.lnk",
+    "git:SAP-Cloud-Debugger"
   ],
   "icon_overrides": {},
   "_last_scan_keys": [
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato"
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\cab_dashboard.lnk",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\producer.lnk",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\pycharm 2025.3.1.1.lnk",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\sap logon 64.lnk",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\tosca commander.lnk",
+    "git:SAP-Cloud-Debugger",
+    "url:http://vartsmppas.arthrex.local:50000/sap(bD1lbiZjPTEwMCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-BPChangeAnalyzer?VIEW_ID=BPCA&STANDALONE_MODE=",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-cm_cockpit",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Shell-home",
+    "url:https://78l-ch5vxjthzs-d.eu20-001.process-insights.cloud.sap/reports/system/176a5922-74ba-4b25-a58f-d03771ee6693/start",
+    "url:https://account.hana.ondemand.com/",
+    "url:https://app-us.signavio.com/p/hub/home?content-lang=en_us&mode=preview",
+    "url:https://arthrex-cloudalm.eu10-004.alm.cloud.sap/launchpad#Shell-home",
+    "url:https://arthrex.sharepoint.com/sites/SAPCenterOfExcellence/SitePages/Home.aspx",
+    "url:https://copilotstudio.microsoft.com/environments/ea571534-4eba-e69c-9a48-83fa7d3bfb1b/home"
   ],
   "python_runtime_path": "",
   "pip_cache_dir": "",
-  "shared_env_hash": "495ace39827ab18e7b6a6dff700784941a1346802cdea0a7be616043b52b4a9d",
+  "shared_env_hash": "b7277cde2c30a6cb35d8702448918125e7cff6cd7a81e67bd58430d43323c7ae",
   "tile_sizes": {
-    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato": "wide"
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\cab_dashboard.lnk": "wide",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\producer.lnk": "wide",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\pycharm 2025.3.1.1.lnk": "wide",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\sap logon 64.lnk": "wide",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Shell-home": "wide",
+    "url:https://arthrex-cloudalm.eu10-004.alm.cloud.sap/launchpad#Shell-home": "wide",
+    "url:https://78l-ch5vxjthzs-d.eu20-001.process-insights.cloud.sap/reports/system/176a5922-74ba-4b25-a58f-d03771ee6693/start": "wide",
+    "url:https://app-us.signavio.com/p/hub/home?content-lang=en_us&mode=preview": "wide",
+    "url:https://account.hana.ondemand.com/": "wide",
+    "url:https://arthrex.sharepoint.com/sites/SAPCenterOfExcellence/SitePages/Home.aspx": "wide",
+    "url:http://vartsmppas.arthrex.local:50000/sap(bD1lbiZjPTEwMCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm": "wide",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-cm_cockpit": "wide",
+    "url:http://vartsmppas.arthrex.local:50000/sap/bc/ui2/flp?sap-client=100&sap-language=EN#Action-BPChangeAnalyzer?VIEW_ID=BPCA&STANDALONE_MODE=": "wide",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\progretomato": "wide",
+    "c:\\users\\er10210\\pycharmprojects\\pythonproject1\\app24_sre_application_cockpit_refactor\\applications\\tosca commander.lnk": "wide",
+    "url:https://copilotstudio.microsoft.com/environments/ea571534-4eba-e69c-9a48-83fa7d3bfb1b/home": "wide",
+    "git:SAP-Cloud-Debugger": "wide"
   },
   "app_status": {}
 }
