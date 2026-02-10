@@ -10,7 +10,8 @@ architecture, and implementation reflect the author's intent and ownership.
 ------------------------------------------------------------------------------
 
 SRE Application Cockpit 🚀
-<img width="976" height="752" alt="image" src="https://github.com/user-attachments/assets/0fae80a3-4e08-4bff-b2a7-150aec682b28" />
+<img width="1007" height="752" alt="image" src="https://github.com/user-attachments/assets/43818c3c-938e-4707-9677-8c8c2ccb8a24" />
+
 
 A Windows-Phone / Metro-style application launcher that acts as a single control
 center for:
