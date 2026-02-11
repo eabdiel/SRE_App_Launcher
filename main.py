@@ -14,13 +14,36 @@
 #  Provided "AS IS", without warranty of any kind.
 #===============================================================================
 
+from __future__ import annotations
+
+import os
 import sys
+from pathlib import Path
+
 from PySide6.QtWidgets import QApplication
 
 from cockpit.main_window import MainWindow
 
 
+def app_root() -> Path:
+    """
+    Resolve the runtime folder that should hold banner.txt, applications/, and state files.
+
+    - In dev: folder containing main.py
+    - In PyInstaller onefile: folder containing the .exe
+    """
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+BASE_DIR = app_root()
+
+
 def main() -> int:
+    # Let cockpit modules know where the "real" runtime folder is.
+    os.environ["SRE_COCKPIT_BASE_DIR"] = str(BASE_DIR)
+
     app = QApplication(sys.argv)
     w = MainWindow()
     w.resize(1000, 720)

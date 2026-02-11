@@ -90,7 +90,8 @@ from .models import AppEntry
 from .state import load_state, save_state, prune_state_for_existing_keys, add_new_keys_to_order
 from .tile_widget import TileWidget, TileVisual
 from .ui_widgets import TileList
-
+import os
+from pathlib import Path
 
 # ----------------------------
 # Dark Theme (Global)
@@ -233,7 +234,8 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(APP_TITLE)
 
-        self.base_dir = Path(__file__).resolve().parent.parent
+        base_override = os.environ.get("SRE_COCKPIT_BASE_DIR")
+        self.base_dir = Path(base_override).resolve() if base_override else Path(__file__).resolve().parent.parent
         self.apps_dir = self.base_dir / APP_FOLDER_NAME
         self.state_path = self.base_dir / STATE_FILE_NAME
         self.state = load_state(self.state_path)
