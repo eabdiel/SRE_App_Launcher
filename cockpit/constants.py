@@ -1,10 +1,10 @@
 #===============================================================================
-#  APP24_SRE_Application_Cockpit | constants.py
+#  SRE_Applications_Cockpit | constants.py
 #===============================================================================
 #  Author      : Edwin A. Rodriguez
 #  Role/Team   : SAP COE / SAP SRE (GRM-Testing-Automation & Governance)
 #  Created     : 2026-02-10
-#  Last Update : 2026-02-10
+#  Last Update : 2026-02-11
 #
 #  Summary
 #  -------
@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QSize
 
-APP_TITLE = "App Launcher"
+APP_TITLE = "SRE Applications Cockpit"
 APP_FOLDER_NAME = "applications"
 STATE_FILE_NAME = "launcher_state.json"
 GIT_REPOS_FILE_NAME = "git-repos"

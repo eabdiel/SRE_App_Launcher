@@ -1,10 +1,10 @@
 #===============================================================================
-#  APP24_SRE_Application_Cockpit | env_manager.py
+#  SRE_Applications_Cockpit | env_manager.py
 #===============================================================================
 #  Author      : Edwin A. Rodriguez
 #  Role/Team   : SAP COE / SAP SRE (GRM-Testing-Automation & Governance)
 #  Created     : 2026-02-10
-#  Last Update : 2026-02-10
+#  Last Update : 2026-02-11
 #
 #  Summary
 #  -------

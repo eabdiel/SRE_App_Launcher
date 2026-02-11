@@ -1,16 +1,20 @@
 #===============================================================================
-#  SRE Application Cockpit | cockpit/main_window.py
+#  SRE Applications Cockpit | cockpit/main_window.py
 #===============================================================================
 #  Author      : Edwin A. Rodriguez
 #  Created     : 2026-02-10
-#  Last Update : 2026-02-10
+#  Last Update : 2026-02-11
 #
-#  Summary
-#  -------
+#  Copyright
+#  ---------
+#  (c) 2026 Edwin A. Rodriguez. All rights reserved.
+#
+#  Description
+#  -----------
 #  Main Metro/Windows-Phone style UI for the cockpit:
-#    - Tile lists: Favorites, Apps, Hidden
-#    - Drag & drop ordering (persisted)
-#    - Drag & drop import:
+#    - Tile lists: Favorites, Main, Hidden (collapsible)
+#    - Drag & drop ordering (persisted in launcher_state.json)
+#    - Drag & drop import into ./applications:
 #         * drop .exe -> creates .lnk in ./applications
 #         * drop .lnk/.url -> copies into ./applications
 #         * drop URL text -> creates .url in ./applications
@@ -18,6 +22,16 @@
 #    - GitHub import via applications/git-repos (plus URL shortcuts)
 #    - Shared Python runtime setup + dependency update (shared env)
 #    - Right-click actions: favorite, hide, rename, icon, tile size, remove
+#
+#  Styling
+#  -------
+#  - Dark gray main window background
+#  - Tile canvases (list backgrounds) are dark to avoid “white noise”
+#  - Dialogs/menus use dark background + white text via global QSS
+#
+#  IMPORTANT
+#  ---------
+#  Keep indentation consistent. Do NOT nest "def ..." blocks inside other methods.
 #===============================================================================
 
 from __future__ import annotations
@@ -48,6 +62,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QLabel,
+    QComboBox,
 )
 
 from .banner_widget import BannerWidget
@@ -56,7 +71,6 @@ from .constants import (
     APP_FOLDER_NAME,
     STATE_FILE_NAME,
     GIT_REPOS_FILE_NAME,
-    METRO_BG,
     METRO_TILE_COLORS,
     TILE_SMALL,
     TILE_WIDE,
@@ -78,16 +92,145 @@ from .tile_widget import TileWidget, TileVisual
 from .ui_widgets import TileList
 
 
-PROGRESS_STYLE = (
-    "QProgressDialog{background:#1a1a1a;color:white;}"
-    " QLabel{color:white;}"
-    " QPushButton{color:white;background:#222;border:1px solid #2a2a2a;padding:6px;}"
-)
+# ----------------------------
+# Dark Theme (Global)
+# ----------------------------
+DARK_QSS = """
+/* =========================
+   APP SURFACES / CONTAINERS
+   ========================= */
+QMainWindow {
+    background-color: #2b2b2b;
+    color: #ffffff;
+    font-family: "Segoe UI";
+}
+
+QSplitter::handle { background: #2b2b2b; }
+
+/* Tile canvases */
+QListWidget {
+    background-color: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    outline: none;
+}
+QListWidget::item { border: none; }
+
+/* =========================
+   CONTROLS
+   ========================= */
+QPushButton, QToolButton {
+    background-color: #1f1f1f;
+    color: #ffffff;
+    border: 1px solid #3a3a3a;
+    padding: 6px 10px;
+}
+QPushButton:hover, QToolButton:hover { background-color: #2a2a2a; }
+QPushButton:pressed, QToolButton:pressed { background-color: #333333; }
+
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: #141414;
+    color: #ffffff;
+    border: 1px solid #3a3a3a;
+    selection-background-color: #2d5b8a;
+    selection-color: #ffffff;
+}
+
+QComboBox {
+    background-color: #141414;
+    color: #ffffff;
+    border: 1px solid #3a3a3a;
+    padding: 4px 8px;
+}
+QComboBox QAbstractItemView {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    selection-background-color: #2d5b8a;
+    selection-color: #ffffff;
+    border: 1px solid #3a3a3a;
+}
+
+/* =========================
+   POPUPS / MENUS
+   ========================= */
+QMenu {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #3a3a3a;
+}
+QMenu::item:selected {
+    background-color: #2d5b8a;
+    color: #ffffff;
+}
+
+QDialog, QMessageBox, QInputDialog, QProgressDialog {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+/* Force readable text inside popups */
+QDialog QLabel,
+QMessageBox QLabel,
+QInputDialog QLabel,
+QProgressDialog QLabel {
+    color: #ffffff;
+    background: transparent;
+}
+
+/* Buttons inside popups */
+QDialog QPushButton,
+QMessageBox QPushButton,
+QInputDialog QPushButton,
+QProgressDialog QPushButton {
+    color: #ffffff;
+}
+
+QProgressBar {
+    border: 1px solid #3a3a3a;
+    background-color: #141414;
+    color: #ffffff;
+    text-align: center;
+}
+QProgressBar::chunk { background-color: #2d5b8a; }
+
+/* =========================
+   SCROLLBARS
+   ========================= */
+QScrollBar:vertical {
+    background: #1e1e1e;
+    width: 12px;
+    margin: 0px;
+}
+QScrollBar::handle:vertical {
+    background: #3a3a3a;
+    min-height: 24px;
+}
+QScrollBar::handle:vertical:hover { background: #4a4a4a; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
+
+/* =========================
+   TILE SAFE ZONE (prevents
+   global styling from painting
+   behind text inside tiles)
+   ========================= */
+TileWidget, TileWidget * {
+    background: transparent;
+}
+"""
+
 
 
 class MainWindow(QMainWindow):
+    # -------------------------------------------------------------------------
+    # Initialization / UI Layout
+    # -------------------------------------------------------------------------
     def __init__(self):
         super().__init__()
+
+        # Apply global dark theme at the app level (covers dialogs, menus, etc.)
+        app = QApplication.instance()
+        if app is not None:
+            app.setStyleSheet(DARK_QSS)
+
         self.setWindowTitle(APP_TITLE)
 
         self.base_dir = Path(__file__).resolve().parent.parent
@@ -98,30 +241,20 @@ class MainWindow(QMainWindow):
         self._runtime_installing = False
         self.setAcceptDrops(True)
 
-        self.setStyleSheet(f"""
-        QMainWindow {{ background: {METRO_BG}; }}
-        QLabel {{ color: white; font-family: "Segoe UI"; }}
-        QToolButton, QPushButton {{
-            font-family: "Segoe UI";
-            color: white;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            padding: 6px 10px;
-        }}
-        QToolButton:hover, QPushButton:hover {{ background: #222; }}
-        QToolButton:pressed, QPushButton:pressed {{ background: #2a2a2a; }}
-        """)
-
         root = QWidget()
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
         layout.setContentsMargins(14, 14, 14, 14)
         layout.setSpacing(10)
 
+        # -------------------------
+        # Header
+        # -------------------------
         header = QHBoxLayout()
         title = QLabel(
             f"<b>{APP_TITLE}</b> — drop EXEs/LNKs/URLs or Python app folders into <code>./{APP_FOLDER_NAME}</code>"
         )
+        title.setStyleSheet("color: #ffffff; background: transparent;")
         header.addWidget(title)
         header.addStretch(1)
 
@@ -147,14 +280,48 @@ class MainWindow(QMainWindow):
 
         layout.addLayout(header)
 
+        # -------------------------
         # Banner (edit ./banner.txt)
+        # -------------------------
         self.banner = BannerWidget(self.base_dir / "banner.txt")
+        # Keep banner dark but distinct
         self.banner.setStyleSheet(
-            "QFrame#BannerWidget{background:#1a1a1a;border:1px solid #2a2a2a;} QLabel{color:white;}"
+            "QFrame#BannerWidget{background:#1f1f1f;border:1px solid #3a3a3a;} QLabel{color:white;}"
         )
         layout.addWidget(self.banner)
 
+        # -------------------------
+        # Quick controls (sorting + filtering)
+        # -------------------------
+        controls_row = QHBoxLayout()
+        controls_row.setSpacing(8)
+
+        self.btn_sort_alpha = QToolButton()
+        self.btn_sort_alpha.setText("A→Z")
+        self.btn_sort_alpha.setToolTip("Sort applications alphabetically")
+        self.btn_sort_alpha.clicked.connect(lambda: self.apply_sort_mode("alpha"))
+        controls_row.addWidget(self.btn_sort_alpha)
+
+        self.btn_sort_type = QToolButton()
+        self.btn_sort_type.setText("Type")
+        self.btn_sort_type.setToolTip("Sort applications by type (Python / URL / Shortcut / Executable)")
+        self.btn_sort_type.clicked.connect(lambda: self.apply_sort_mode("type"))
+        controls_row.addWidget(self.btn_sort_type)
+
+        controls_row.addSpacing(12)
+
+        self.cbo_filter = QComboBox()
+        self.cbo_filter.addItems(["All Types", "Python", "URL", "Executable", "Shortcut"])
+        self.cbo_filter.setToolTip("Filter the main list by application type")
+        self.cbo_filter.currentIndexChanged.connect(self.on_filter_changed)
+        controls_row.addWidget(self.cbo_filter)
+
+        controls_row.addStretch(1)
+        layout.addLayout(controls_row)
+
+        # -------------------------
         # Lists
+        # -------------------------
         self.fav_list = TileList()
         self.fav_list.itemDoubleClicked.connect(self.launch_item)
         self.fav_list.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -164,6 +331,10 @@ class MainWindow(QMainWindow):
         self.main_list.itemDoubleClicked.connect(self.launch_item)
         self.main_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.main_list.customContextMenuRequested.connect(lambda pos: self.open_context_menu(self.main_list, pos))
+
+        # Ensure list canvases are dark (even if TileList sets its own)
+        for lst in (self.fav_list, self.main_list):
+            lst.setStyleSheet("QListWidget{background:#1f1f1f;border:1px solid #3a3a3a;}")
 
         hidden_header = QHBoxLayout()
         self.hidden_toggle = QToolButton()
@@ -182,6 +353,7 @@ class MainWindow(QMainWindow):
         self.hidden_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.hidden_list.customContextMenuRequested.connect(lambda pos: self.open_context_menu(self.hidden_list, pos))
         self.hidden_list.setVisible(False)
+        self.hidden_list.setStyleSheet("QListWidget{background:#1f1f1f;border:1px solid #3a3a3a;}")
 
         splitter = QSplitter(Qt.Vertical)
         splitter.addWidget(self.fav_list)
@@ -190,22 +362,34 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 3)
         splitter.setStretchFactor(2, 1)
+
+        # Splitter handle styling helps reduce visual noise
+        splitter.setStyleSheet("QSplitter::handle{background:#2b2b2b;}")
+
         layout.addWidget(splitter)
 
+        # Reorder persistence
         self.fav_list.model().rowsMoved.connect(lambda *_: self.persist_order_from_ui())
         self.main_list.model().rowsMoved.connect(lambda *_: self.persist_order_from_ui())
         self.hidden_list.model().rowsMoved.connect(lambda *_: self.persist_order_from_ui())
 
+        # Periodic refresh (detect filesystem changes)
         self.refresh_timer = QTimer(self)
         self.refresh_timer.setInterval(1500)
         self.refresh_timer.timeout.connect(self.refresh_silent)
         self.refresh_timer.start()
 
+        # Restore persisted filter selection
+        bucket = self._current_filter_bucket()
+        mapping = {"all": 0, "python": 1, "url": 2, "executable": 3, "shortcut": 4}
+        self.cbo_filter.setCurrentIndex(mapping.get(bucket, 0))
+        self._apply_drag_rules_for_filter()
+
         self.refresh()
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Drag & Drop (pin tiles quickly)
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def dragEnterEvent(self, event):
         md = event.mimeData()
         if md.hasUrls() or md.hasText():
@@ -299,9 +483,9 @@ class MainWindow(QMainWindow):
         )
         subprocess.check_call(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps])
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Git file parsing + placeholders
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def _entries_from_git_file(self) -> list[tuple[str, str, str]]:
         repos_file = self.apps_dir / GIT_REPOS_FILE_NAME
         if not repos_file.exists():
@@ -350,9 +534,9 @@ class MainWindow(QMainWindow):
         except Exception:
             return False
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Refresh / rebuild
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def refresh_silent(self):
         apps = scan_applications_folder(self.apps_dir)
         apps = self._augment_with_git_placeholders(apps)
@@ -372,23 +556,23 @@ class MainWindow(QMainWindow):
         prune_state_for_existing_keys(self.state, existing)
         add_new_keys_to_order(self.state, list(self.apps_by_key.keys()))
 
+        # If user previously chose a sort mode, re-apply it after refresh.
+        sort_mode = str(self.state.get("ui_sort_mode", "manual")).lower()
+        if sort_mode in ("alpha", "type"):
+            self.apply_sort_mode(sort_mode)
+            save_state(self.state_path, self.state)
+            return
+
         self.rebuild_lists()
         save_state(self.state_path, self.state)
 
-    def _tile_color_for_key(self, k: str) -> str:
-        h = hashlib.sha1(k.encode("utf-8")).hexdigest()
-        idx = int(h[:2], 16) % len(METRO_TILE_COLORS)
-        return METRO_TILE_COLORS[idx]
-
-    def _runtime_ready(self) -> bool:
-        req = self.base_dir / "cockpit-requirements.txt"
-        venv_py = self.base_dir / "runtime_env" / "Scripts" / "python.exe"
-        return venv_py.exists() and req.exists() and bool(self.state.get("shared_env_hash"))
-
     def rebuild_lists(self):
+        """Rebuild Favorites, Main, and Hidden lists respecting filter state."""
         self.fav_list.clear()
         self.main_list.clear()
         self.hidden_list.clear()
+
+        filter_bucket = self._current_filter_bucket()
 
         def add_item(list_widget: TileList, key: str):
             app = self.apps_by_key.get(key)
@@ -443,15 +627,131 @@ class MainWindow(QMainWindow):
             add_item(self.fav_list, k)
 
         for k in self.state.get("order", []):
-            if k not in self.state.get("hidden", []) and k not in self.state.get("favorites", []):
-                add_item(self.main_list, k)
+            if k in self.state.get("hidden", []) or k in self.state.get("favorites", []):
+                continue
+            app = self.apps_by_key.get(k)
+            bucket = self._kind_bucket(app.kind if app else "")
+            if filter_bucket != "all" and bucket != filter_bucket:
+                continue
+            add_item(self.main_list, k)
 
         for k in self.state.get("hidden", []):
+            app = self.apps_by_key.get(k)
+            bucket = self._kind_bucket(app.kind if app else "")
+            if filter_bucket != "all" and bucket != filter_bucket:
+                continue
             add_item(self.hidden_list, k)
 
-    # ----------------------------
+    def _tile_color_for_key(self, k: str) -> str:
+        h = hashlib.sha1(k.encode("utf-8")).hexdigest()
+        idx = int(h[:2], 16) % len(METRO_TILE_COLORS)
+        return METRO_TILE_COLORS[idx]
+
+    def _runtime_ready(self) -> bool:
+        req = self.base_dir / "cockpit-requirements.txt"
+        venv_py = self.base_dir / "runtime_env" / "Scripts" / "python.exe"
+        return venv_py.exists() and req.exists() and bool(self.state.get("shared_env_hash"))
+
+    # -------------------------------------------------------------------------
+    # Sorting & filtering helpers
+    # -------------------------------------------------------------------------
+    def _kind_bucket(self, kind: str) -> str:
+        """Normalize internal kinds to user-facing buckets."""
+        if kind in ("py", "git"):
+            return "python"
+        if kind in ("urlfile", "url"):
+            return "url"
+        if kind == "lnk":
+            return "shortcut"
+        if kind == "exe":
+            return "executable"
+        return kind
+
+    def _current_filter_bucket(self) -> str:
+        return str(self.state.get("ui_filter_bucket", "all")).lower()
+
+    def _set_filter_bucket(self, bucket: str) -> None:
+        self.state["ui_filter_bucket"] = bucket
+        save_state(self.state_path, self.state)
+
+    def _set_sort_mode(self, mode: str) -> None:
+        # mode: manual | alpha | type
+        self.state["ui_sort_mode"] = mode
+        save_state(self.state_path, self.state)
+
+    def on_filter_changed(self) -> None:
+        text = (self.cbo_filter.currentText() or "").strip().lower()
+        if text.startswith("all"):
+            bucket = "all"
+        elif text.startswith("python"):
+            bucket = "python"
+        elif text.startswith("url"):
+            bucket = "url"
+        elif text.startswith("exe"):
+            bucket = "executable"
+        elif text.startswith("shortcut"):
+            bucket = "shortcut"
+        else:
+            bucket = "all"
+
+        self._set_filter_bucket(bucket)
+        self._apply_drag_rules_for_filter()
+        self.rebuild_lists()
+
+    def _apply_drag_rules_for_filter(self) -> None:
+        # If the list is filtered, dragging only affects the subset and can be confusing.
+        # Disable drag/drop on the main list while filtered to keep state consistent.
+        bucket = self._current_filter_bucket()
+        drag_ok = bucket == "all"
+        self.main_list.setDragEnabled(drag_ok)
+        self.main_list.setAcceptDrops(drag_ok)
+        self.main_list.setDropIndicatorShown(drag_ok)
+
+    def apply_sort_mode(self, mode: str) -> None:
+        """Apply a sort to the main list and persist the resulting order."""
+        mode = (mode or "").lower().strip()
+        if mode not in ("alpha", "type"):
+            return
+
+        existing = set(self.apps_by_key.keys())
+        excluded = set(self.state.get("favorites", [])) | set(self.state.get("hidden", []))
+        main_keys = [k for k in self.state.get("order", []) if k in existing and k not in excluded]
+
+        def title_for_key(k: str) -> str:
+            app = self.apps_by_key.get(k)
+            if not app:
+                return k
+            return str(self.state.get("title_overrides", {}).get(k, app.display_name)).lower()
+
+        def sort_key_alpha(k: str):
+            return (title_for_key(k), k)
+
+        def sort_key_type(k: str):
+            app = self.apps_by_key.get(k)
+            bucket = self._kind_bucket(app.kind if app else "")
+            order = {"python": 0, "url": 1, "shortcut": 2, "executable": 3}
+            return (order.get(bucket, 99), title_for_key(k), k)
+
+        if mode == "alpha":
+            main_keys = sorted(main_keys, key=sort_key_alpha)
+        else:
+            main_keys = sorted(main_keys, key=sort_key_type)
+
+        # Persist back into state["order"] while keeping any non-main keys intact.
+        leftovers = [
+            k for k in self.state.get("order", [])
+            if k in existing and k not in set(main_keys)
+        ]
+        self.state["order"] = main_keys + leftovers
+        self._set_sort_mode(mode)
+
+        self._apply_drag_rules_for_filter()
+        self.rebuild_lists()
+        save_state(self.state_path, self.state)
+
+    # -------------------------------------------------------------------------
     # Runtime setup
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def setup_runtime(self):
         req = self.base_dir / "cockpit-requirements.txt"
         if not req.exists():
@@ -463,7 +763,6 @@ class MainWindow(QMainWindow):
         QApplication.processEvents()
 
         prog = QProgressDialog("Setting up shared Python environment…", "Close", 0, 0, self)
-        prog.setStyleSheet(PROGRESS_STYLE)
         prog.setWindowTitle("Setup Runtime")
         prog.setWindowModality(Qt.WindowModal)
         prog.setMinimumDuration(0)
@@ -483,9 +782,9 @@ class MainWindow(QMainWindow):
             prog.close()
             self.rebuild_lists()
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Dependency maintenance
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def update_libraries(self):
         req = self.base_dir / "cockpit-requirements.txt"
         if not req.exists():
@@ -500,7 +799,6 @@ class MainWindow(QMainWindow):
             return
 
         prog = QProgressDialog("Scanning applications and updating libraries…", "Close", 0, 0, self)
-        prog.setStyleSheet(PROGRESS_STYLE)
         prog.setWindowTitle("Update Libraries")
         prog.setWindowModality(Qt.WindowModal)
         prog.setMinimumDuration(0)
@@ -530,9 +828,9 @@ class MainWindow(QMainWindow):
             prog.close()
             self.refresh()
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Git sync button (bulk)
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def load_from_git(self):
         repos_file = self.apps_dir / GIT_REPOS_FILE_NAME
 
@@ -562,7 +860,6 @@ class MainWindow(QMainWindow):
             return
 
         prog = QProgressDialog("Loading repositories from GitHub…", "Cancel", 0, len(repo_urls), self)
-        prog.setStyleSheet(PROGRESS_STYLE)
         prog.setWindowTitle("Load from Git")
         prog.setWindowModality(Qt.WindowModal)
         prog.setMinimumDuration(0)
@@ -617,9 +914,9 @@ class MainWindow(QMainWindow):
 
         QMessageBox.information(self, "Load from Git — results", "\n".join(msg) if msg else "Nothing to do.")
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Launch behavior
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def launch_item(self, item: QListWidgetItem):
         key = item.data(Qt.UserRole)
         entry = self.apps_by_key.get(key)
@@ -635,7 +932,6 @@ class MainWindow(QMainWindow):
                 dest = self.apps_dir / repo
 
                 prog = QProgressDialog(f"Downloading {owner}/{repo}…", "Cancel", 0, 0, self)
-                prog.setStyleSheet(PROGRESS_STYLE)
                 prog.setWindowTitle("Download and install")
                 prog.setWindowModality(Qt.WindowModal)
                 prog.setMinimumDuration(0)
@@ -663,9 +959,9 @@ class MainWindow(QMainWindow):
             else:
                 QMessageBox.critical(self, "Launch failed", str(e))
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Context menu
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def open_context_menu(self, which_list: TileList, pos):
         item = which_list.itemAt(pos)
         if not item:
@@ -739,6 +1035,8 @@ class MainWindow(QMainWindow):
                     self.state.get("title_overrides", {}).pop(key, None)
 
         elif chosen == act_icon:
+            # Native dialogs may ignore QSS on Windows; but keep native by default.
+            # If you want fully dark file dialog, switch to DontUseNativeDialog.
             file_path, _ = QFileDialog.getOpenFileName(
                 self,
                 "Choose icon image",
@@ -809,6 +1107,7 @@ class MainWindow(QMainWindow):
         save_state(self.state_path, self.state)
 
     def persist_order_from_ui(self):
+        """Persist ordering after drag/drop. Also switches sort mode to manual."""
         self.state["favorites"] = [self.fav_list.item(i).data(Qt.UserRole) for i in range(self.fav_list.count())]
         self.state["hidden"] = [self.hidden_list.item(i).data(Qt.UserRole) for i in range(self.hidden_list.count())]
 
@@ -820,19 +1119,22 @@ class MainWindow(QMainWindow):
             if k in existing and k not in excluded and k not in set(visible_main)
         ]
         self.state["order"] = visible_main + leftovers
+        self._set_sort_mode("manual")
         save_state(self.state_path, self.state)
 
     def toggle_hidden(self, checked: bool):
         self.hidden_list.setVisible(checked)
         self.hidden_toggle.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
 
-    # ----------------------------
+    # -------------------------------------------------------------------------
     # Explorer helpers
-    # ----------------------------
+    # -------------------------------------------------------------------------
     def open_apps_folder(self):
+        """Open the ./applications folder in the OS file explorer."""
         self.open_in_explorer(self.apps_dir)
 
     def open_in_explorer(self, folder: Path):
+        """Open a folder in the system file explorer (Windows/Mac/Linux)."""
         try:
             if sys.platform.startswith("win"):
                 subprocess.Popen(["explorer", str(folder)])

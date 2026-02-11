@@ -1,10 +1,10 @@
 #===============================================================================
-#  APP24_SRE_Application_Cockpit | launcher.py
+#  SRE_Applications_Cockpit | launcher.py
 #===============================================================================
 #  Author      : Edwin A. Rodriguez
 #  Role/Team   : SAP COE / SAP SRE (GRM-Testing-Automation & Governance)
 #  Created     : 2026-02-10
-#  Last Update : 2026-02-10
+#  Last Update : 2026-02-11
 #
 #  Summary
 #  -------
