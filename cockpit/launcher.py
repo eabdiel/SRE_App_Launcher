@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import subprocess
 import webbrowser
 from pathlib import Path
@@ -61,6 +62,11 @@ def launch_app(entry: AppEntry, base_dir: Path, state: dict) -> None:
         return
 
     if entry.kind == "lnk":
+        _startfile(entry.launch_target)
+        return
+
+    if entry.kind == "sap":
+        # SAP GUI shortcut (.sap) - let Windows/SAP GUI handle it
         _startfile(entry.launch_target)
         return
 

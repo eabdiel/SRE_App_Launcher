@@ -63,20 +63,45 @@ def _stdlib_root() -> str:
 
 
 def is_stdlib_module(name: str) -> bool:
-    """True if `name` appears to be part of the standard library for this interpreter."""
+    """True if `name` appears to be part of the standard library for this interpreter.
+
+    Notes:
+    - We try to be case-insensitive because requirements files sometimes contain
+      things like `Json` which would otherwise slip through and break pip.
+    - If available (Python 3.10+), we also consult `sys.stdlib_module_names`.
+    """
     if not name:
         return True
-    top = name.split(".")[0]
-    if top in ALWAYS_SKIP:
+
+    top_raw = name.split(".")[0].strip()
+    if not top_raw:
         return True
-    if top in sys.builtin_module_names:
+
+    top = top_raw
+    top_l = top_raw.lower()
+
+    # Fast-path stdlib module name table (3.10+)
+    stdlib_names = getattr(sys, "stdlib_module_names", None)
+    if stdlib_names and top_l in {n.lower() for n in stdlib_names}:
+        return True
+
+    # ALWAYS_SKIP / builtins (case-insensitive)
+    if top_l in {t.lower() for t in ALWAYS_SKIP}:
+        return True
+    if top in sys.builtin_module_names or top_l in {n.lower() for n in sys.builtin_module_names}:
         return True
 
     stdlib_root = _stdlib_root()
-    try:
-        spec = importlib.util.find_spec(top)
-    except Exception:
-        spec = None
+
+    # Try resolving both raw and lower-cased names for robustness
+    spec = None
+    for candidate in (top, top_l):
+        try:
+            spec = importlib.util.find_spec(candidate)
+        except Exception:
+            spec = None
+        if spec:
+            break
 
     if not spec:
         return False

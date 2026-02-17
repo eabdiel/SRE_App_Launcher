@@ -29,7 +29,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='SRE_Applications_Cockpit',
+    name='SRE_Application_Cockpit',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -43,4 +43,15 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=['sap_sre_icon.ico'],
+)
+
+# One-folder build: collect the exe + dependencies into a dist folder.
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='SRE_Application_Cockpit',
 )

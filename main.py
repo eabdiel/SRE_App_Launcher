@@ -40,12 +40,54 @@ def app_root() -> Path:
 BASE_DIR = app_root()
 
 
+
+def parse_import_args(argv: list[str]) -> tuple[Path | None, bool]:
+    """Parse command-line args for SendTo / import usage.
+
+    Supported:
+      - SRE_Application_Cockpit.exe --import "<path>" [--prompt]
+      - SRE_Application_Cockpit.exe "<path>"   (legacy/simple)
+    """
+    path: Path | None = None
+    prompt = False
+
+    args = argv[1:]
+    if not args:
+        return None, False
+
+    # flags
+    if "--prompt" in args:
+        prompt = True
+        args = [a for a in args if a != "--prompt"]
+
+    if "--import" in args:
+        try:
+            i = args.index("--import")
+            if i + 1 < len(args):
+                path = Path(args[i + 1]).expanduser()
+        except ValueError:
+            pass
+    else:
+        # If launched with a single positional argument, treat it as a path.
+        if len(args) == 1 and not args[0].startswith("-"):
+            path = Path(args[0]).expanduser()
+
+    if path is not None:
+        try:
+            path = path.resolve()
+        except Exception:
+            pass
+    return path, prompt
+
+
 def main() -> int:
     # Let cockpit modules know where the "real" runtime folder is.
     os.environ["SRE_COCKPIT_BASE_DIR"] = str(BASE_DIR)
 
     app = QApplication(sys.argv)
-    w = MainWindow()
+
+    import_path, prompt = parse_import_args(sys.argv)
+    w = MainWindow(import_path=import_path, prompt_import=prompt)
     w.resize(1000, 720)
     w.show()
     return app.exec()

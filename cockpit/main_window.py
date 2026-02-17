@@ -224,7 +224,7 @@ class MainWindow(QMainWindow):
     # -------------------------------------------------------------------------
     # Initialization / UI Layout
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, import_path: Path | None = None, prompt_import: bool = False):
         super().__init__()
 
         # Apply global dark theme at the app level (covers dialogs, menus, etc.)
@@ -318,6 +318,17 @@ class MainWindow(QMainWindow):
         self.cbo_filter.currentIndexChanged.connect(self.on_filter_changed)
         controls_row.addWidget(self.cbo_filter)
 
+        # Hidden section toggle (moved up for QoL)
+        self.hidden_toggle = QToolButton()
+        self.hidden_toggle.setText("Hidden")
+        self.hidden_toggle.setCheckable(True)
+        self.hidden_toggle.setChecked(False)
+        self.hidden_toggle.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.hidden_toggle.setArrowType(Qt.RightArrow)
+        self.hidden_toggle.setToolTip("Show/hide hidden applications list")
+        self.hidden_toggle.toggled.connect(self.toggle_hidden)
+        controls_row.addWidget(self.hidden_toggle)
+
         controls_row.addStretch(1)
         layout.addLayout(controls_row)
 
@@ -337,18 +348,6 @@ class MainWindow(QMainWindow):
         # Ensure list canvases are dark (even if TileList sets its own)
         for lst in (self.fav_list, self.main_list):
             lst.setStyleSheet("QListWidget{background:#1f1f1f;border:1px solid #3a3a3a;}")
-
-        hidden_header = QHBoxLayout()
-        self.hidden_toggle = QToolButton()
-        self.hidden_toggle.setText("Hidden")
-        self.hidden_toggle.setCheckable(True)
-        self.hidden_toggle.setChecked(False)
-        self.hidden_toggle.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.hidden_toggle.setArrowType(Qt.RightArrow)
-        self.hidden_toggle.toggled.connect(self.toggle_hidden)
-        hidden_header.addWidget(self.hidden_toggle)
-        hidden_header.addStretch(1)
-        layout.addLayout(hidden_header)
 
         self.hidden_list = TileList()
         self.hidden_list.itemDoubleClicked.connect(self.launch_item)
@@ -389,6 +388,11 @@ class MainWindow(QMainWindow):
 
         self.refresh()
 
+        # If launched via Windows "Send to" (or CLI import), add the target into /applications.
+        if import_path is not None:
+            QTimer.singleShot(0, lambda p=import_path, prm=prompt_import: self.import_from_cli(p, prm))
+
+
     # -------------------------------------------------------------------------
     # Drag & Drop (pin tiles quickly)
     # -------------------------------------------------------------------------
@@ -410,7 +414,7 @@ class MainWindow(QMainWindow):
                         p = Path(u.toLocalFile())
                         if not p.exists():
                             continue
-                        if p.is_file() and p.suffix.lower() in (".exe", ".lnk", ".url"):
+                        if p.is_file() and p.suffix.lower() in (".exe", ".lnk", ".url", ".sap"):
                             self._import_file_as_tile(p)
                             added_any = True
                         elif p.is_dir():
@@ -441,7 +445,7 @@ class MainWindow(QMainWindow):
     def _import_file_as_tile(self, src: Path):
         self.apps_dir.mkdir(parents=True, exist_ok=True)
 
-        if src.suffix.lower() in (".lnk", ".url"):
+        if src.suffix.lower() in (".lnk", ".url", ".sap"):
             dest = self.apps_dir / src.name
             if dest.exists():
                 return
@@ -453,6 +457,85 @@ class MainWindow(QMainWindow):
             if dest.exists():
                 return
             self._create_windows_shortcut(target=src, link_path=dest)
+
+
+    def import_from_cli(self, src_path: Path, prompt: bool = False):
+        """Handle an external file/folder sent to the cockpit (e.g., right-click → Send to).
+
+        - .lnk/.url/.sap : copied into ./applications
+        - .exe           : creates a .lnk into ./applications
+        - other files    : creates a .lnk pointing to the file
+        - folder         : imported as a python app folder
+        """
+        try:
+            p = Path(src_path)
+        except Exception:
+            return
+
+        if not p.exists():
+            return
+
+        # Optional naming prompt (lightweight)
+        custom_name = None
+        if prompt:
+            name, ok = QInputDialog.getText(self, "Add to Cockpit", "Tile name (optional):", text=p.stem)
+            if ok and name.strip():
+                custom_name = name.strip()
+
+        if p.is_dir():
+            self._import_folder_as_tile(p)
+            self.refresh_silent()
+            if custom_name:
+                self._rename_latest_import(custom_name)
+            return
+
+        # file
+        if p.suffix.lower() in (".lnk", ".url", ".sap"):
+            self._import_file_as_tile(p)
+            self.refresh_silent()
+            if custom_name:
+                self._rename_latest_import(custom_name)
+            return
+
+        if p.suffix.lower() == ".exe":
+            self._import_file_as_tile(p)
+            self.refresh_silent()
+            if custom_name:
+                self._rename_latest_import(custom_name)
+            return
+
+        # default: create a shortcut that points to the file
+        self.apps_dir.mkdir(parents=True, exist_ok=True)
+        link_name = f"{custom_name}.lnk" if custom_name else f"{p.stem}.lnk"
+        dest = self.apps_dir / link_name
+        if not dest.exists():
+            try:
+                self._create_windows_shortcut(target=p, link_path=dest)
+            except Exception:
+                # fallback: copy (non-windows)
+                try:
+                    shutil.copy2(p, dest)
+                except Exception:
+                    pass
+        self.refresh_silent()
+
+    def _rename_latest_import(self, new_name: str):
+        """Best-effort: rename the most recently modified item in applications/ to new_name."""
+        try:
+            items = list(self.apps_dir.glob("*"))
+            if not items:
+                return
+            latest = max(items, key=lambda x: x.stat().st_mtime)
+            if latest.suffix.lower() == ".lnk":
+                latest.rename(latest.with_name(f"{new_name}.lnk"))
+            elif latest.suffix.lower() == ".url":
+                latest.rename(latest.with_name(f"{new_name}.url"))
+            elif latest.suffix.lower() == ".sap":
+                latest.rename(latest.with_name(f"{new_name}.sap"))
+            else:
+                latest.rename(latest.with_name(new_name))
+        except Exception:
+            return
 
     def _import_folder_as_tile(self, folder: Path):
         self.apps_dir.mkdir(parents=True, exist_ok=True)
@@ -591,6 +674,8 @@ class MainWindow(QMainWindow):
                 subtitle = "Executable"
             elif app.kind == "lnk":
                 subtitle = "Shortcut"
+            elif app.kind == "sap":
+                subtitle = "SAP Shortcut"
             elif app.kind == "urlfile":
                 subtitle = "Website"
             else:
@@ -663,7 +748,7 @@ class MainWindow(QMainWindow):
             return "python"
         if kind in ("urlfile", "url"):
             return "url"
-        if kind == "lnk":
+        if kind in ("lnk", "sap"):
             return "shortcut"
         if kind == "exe":
             return "executable"

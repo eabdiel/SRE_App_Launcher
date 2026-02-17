@@ -96,6 +96,21 @@ def scan_applications_folder(apps_dir: Path) -> List[AppEntry]:
             continue
 
 
+        # SAP GUI Shortcut (.sap) - treat as launchable (opens SAP Logon with parameters)
+        if item.is_file() and item.suffix.lower() == ".sap":
+            key = safe_key(item)
+            apps.append(
+                AppEntry(
+                    key=key,
+                    display_name=item.stem,
+                    kind="sap",
+                    path=str(item),
+                    launch_target=str(item),
+                )
+            )
+            continue
+
+
         # Website shortcut (.url)
         if item.is_file() and item.suffix.lower() == ".url":
             key = safe_key(item)
