@@ -1,5 +1,12 @@
-SRE APPLICATION COCKPIT
-=======================
+# SRE Application Cockpit — Windows app launcher
+
+Windows application launcher for SRE tools, local Python apps, public GitHub projects, executables, and website shortcuts.
+
+A project of **[ProgreTech LLC](https://progretech.com)**, owned and maintained by **Ed Rodriguez**. Third-party components and contributions retain their respective ownership and notices.
+
+[Project website](https://progretech.com) · [Report an issue](https://github.com/eabdiel/SRE_App_Launcher/issues) · [Contribute](CONTRIBUTING.md)
+
+> Licensing needs clarification. See [License and reuse](#license-and-reuse) before redistribution.
 
 NOTE:
 -----
@@ -10,7 +17,7 @@ architecture, and implementation reflect the author's intent and ownership.
 ------------------------------------------------------------------------------
 
 SRE Application Cockpit 🚀
-<img width="1007" height="752" alt="image" src="https://github.com/user-attachments/assets/43818c3c-938e-4707-9677-8c8c2ccb8a24" />
+<img width="1007" height="752" alt="SRE Application Cockpit with application tiles" src="https://github.com/user-attachments/assets/43818c3c-938e-4707-9677-8c8c2ccb8a24" />
 
 
 A Windows-Phone / Metro-style application launcher that acts as a single control
@@ -187,7 +194,7 @@ AUTHOR
 ------
 
 Edwin A. Rodriguez
-SAP COE / SRE / Automation / Risk Engineering
+ProgreTech LLC / SRE / Automation / Risk Engineering
 
 ------------------------------------------------------------------------------
 
@@ -201,3 +208,17 @@ Use it. Modify it. Ship it. Improve it.
 ------------------------------------------------------------------------------
 
 “One launcher. One runtime. Zero friction.”
+
+## Collaboration
+
+Device compatibility notes, setup documentation, and reproducible connection failures are useful ways to help. Read [CONTRIBUTING.md](CONTRIBUTING.md) for issue reports, proposed changes, and attribution requirements.
+
+## License and reuse
+
+**License clarification needed:** the original README identifies MIT terms, while [license.md](license.md) contains custom ProgreTech terms. Clarify the scope before redistribution; this update does not revoke previously granted rights. Bundled applications retain their own licenses.
+
+## More from ProgreTech
+
+Explore [ProgreTech Mesh](https://mesh.progretech.com) for monitoring and interacting with independently running AI agents (sign-in required).
+
+Discover the wider portfolio at [progretech.com](https://progretech.com). These links identify related products; they do not imply a bundled integration or shared license.
